@@ -54,7 +54,6 @@ public class ProductService {
     private String baseURL;
 
     public List<Product> getProductList() throws JsonProcessingException {
-        getCurrencyBase();
         return productRepository.findAll();
     }
 
