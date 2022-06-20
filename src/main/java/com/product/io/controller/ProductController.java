@@ -23,16 +23,15 @@ import static com.product.io.util.Constant.PRODUCT_INSERTED;
 public class ProductController {
 
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
     ProductService productService;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     @GetMapping("v1/products")
-    public ResponseEntity<List<Product>> getProducts(){
+    public ResponseEntity<List<Product>> getProducts() {
         try {
             List<Product> productList = productService.getProductList();
-            logger.info(GETTING_PRODUCT_LIST,productList.size());
+            logger.info(GETTING_PRODUCT_LIST, productList.size());
             return new ResponseEntity<>(productList, HttpStatus.CREATED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,10 +40,10 @@ public class ProductController {
     }
 
     @GetMapping("v2/products")
-    public ResponseEntity<List<ProductResponse>> getProductsWithCurrency(){
+    public ResponseEntity<List<ProductResponse>> getProductsWithCurrency() {
         try {
             List<ProductResponse> ProductResponse = productService.getProductListWithCurrencies();
-            logger.info(GETTING_PRODUCT_LIST,ProductResponse.size());
+            logger.info(GETTING_PRODUCT_LIST, ProductResponse.size());
             return new ResponseEntity<>(ProductResponse, HttpStatus.CREATED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,7 +56,7 @@ public class ProductController {
     public ResponseEntity<Product> saveProduct(@RequestBody Product requestProduct) {
         try {
             Product product = productService.saveProduct(requestProduct);
-            logger.info(PRODUCT_INSERTED,product.getName());
+            logger.info(PRODUCT_INSERTED, product.getName());
             return new ResponseEntity<>(product, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

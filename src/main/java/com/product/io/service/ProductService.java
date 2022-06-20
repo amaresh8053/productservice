@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,53 +57,48 @@ public class ProductService {
     }
 
     public List<ProductResponse> getProductListWithCurrencies() throws JsonProcessingException {
-        List<ProductResponse> productResponseList=new ArrayList<>();
-        List<Product> productList=productRepository.findAll();
-        productResponseList=processCurrency(productList);
+        List<ProductResponse> productResponseList = new ArrayList<>();
+        List<Product> productList = productRepository.findAll();
+        productResponseList = processCurrency(productList);
         return productResponseList;
     }
 
 
     private List<ProductResponse> processCurrency(List<Product> productList) throws JsonProcessingException {
-        Map<String, Float> rates=getCurrencyBase();
-        logger.info("Rates {}",rates);
-        List<ProductResponse> productResponseList=new ArrayList<>();
+        Map<String, Float> rates = getCurrencyBase();
+        logger.info("Rates {}", rates);
+        List<ProductResponse> productResponseList = new ArrayList<>();
 
-        for(Product product:productList){
-            float priceInBaseCurrency=product.getPrice();
-            Map<String, Float> updatedRates=rates.entrySet().stream().collect(Collectors.toMap(
+        for (Product product : productList) {
+            float priceInBaseCurrency = product.getPrice();
+            Map<String, Float> updatedRates = rates.entrySet().stream().collect(Collectors.toMap(
                     e -> e.getKey(),
-                    e -> e.getValue()*priceInBaseCurrency
+                    e -> e.getValue() * priceInBaseCurrency
             ));
-            ProductResponse productResponse=new ProductResponse();
-            BeanUtils.copyProperties(product,productResponse);
+            ProductResponse productResponse = new ProductResponse();
+            BeanUtils.copyProperties(product, productResponse);
             productResponse.setPrice(updatedRates);
             productResponseList.add(productResponse);
         }
 
         return productResponseList;
     }
-    private Map<String,Float> getCurrencyBase() throws JsonProcessingException {
-        logger.info(BASE_URL,baseURL);
-        String URL=baseURL+ SYMBOLS +currencyList+ BASE +baseCurrency;
-        logger.info(FINAL_URL,URL);
+
+    private Map<String, Float> getCurrencyBase() throws JsonProcessingException {
+        logger.info(BASE_URL, baseURL);
+        String URL = baseURL + SYMBOLS + currencyList + BASE + baseCurrency;
+        logger.info(FINAL_URL, URL);
         HttpHeaders headers = new HttpHeaders();
         headers.set(APIKEY, apikey);
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(URL,HttpMethod.GET,requestEntity,String.class);
-        JsonNode jsonNode=mapper.readTree(response.getBody());
+        ResponseEntity<String> response = restTemplate.exchange(URL, HttpMethod.GET, requestEntity, String.class);
+        JsonNode jsonNode = mapper.readTree(response.getBody());
         Map<String, Float> rates = mapper.convertValue(jsonNode.get("rates"), new TypeReference<Map<String, Float>>() {
         });
         return rates;
     }
 
-    private Map<String,Float> getCurrencyBase_Fallback(){
-        Map<String, Float> rates=new HashMap<>();
-        rates.put("GBP",1f);
-        return rates;
-    }
-
-    public Product saveProduct(Product product){
+    public Product saveProduct(Product product) {
         return productRepository.save(product);
     }
 
