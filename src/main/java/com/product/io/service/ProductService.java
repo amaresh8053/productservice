@@ -9,6 +9,7 @@ import java.util.Map;
 
 public interface ProductService {
     public List<Product> getProductList() throws JsonProcessingException;
+    public Product getProduct(String id);
     public List<ProductResponse> getProductListWithCurrencies(Map<String, Float> rates) throws JsonProcessingException;
     public List<ProductResponse> processCurrency(List<Product> productList, Map<String, Float> rates) throws JsonProcessingException;
     public Map<String, Float> getCurrencyBase() throws JsonProcessingException;

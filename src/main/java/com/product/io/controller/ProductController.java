@@ -1,6 +1,8 @@
 package com.product.io.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.product.io.exception.ErrorDetails;
+import com.product.io.exception.ProductNotFoundException;
 import com.product.io.model.Product;
 import com.product.io.model.ProductResponse;
 import com.product.io.service.ProductService;
@@ -10,14 +12,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import static com.product.io.util.Constant.*;
 
-
+@ControllerAdvice
 @RestController
 public class ProductController {
 
@@ -33,18 +38,24 @@ public class ProductController {
             logger.info(GETTING_PRODUCT_LIST, productList.size());
             return new ResponseEntity<>(productList, HttpStatus.CREATED);
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    @GetMapping("v1/products/{id}")
+    public ResponseEntity<Product> getProduct(@PathVariable String id) {
+        Product product = productService.getProduct(id);
+        logger.info(GETTING_PRODUCT_LIST, product.getName());
+        return new ResponseEntity<>(product, HttpStatus.CREATED);
+    }
+
     @GetMapping("v2/products")
-    @CircuitBreaker(name = SERVICE_NAME,fallbackMethod = "getDefaultCurrencyBase")
+    @CircuitBreaker(name = SERVICE_NAME, fallbackMethod = "getDefaultCurrencyBase")
     public ResponseEntity<List<ProductResponse>> getProductsWithCurrency() throws JsonProcessingException {
-            Map<String, Float> rates = productService.getCurrencyBase();
-            List<ProductResponse> ProductResponse = productService.getProductListWithCurrencies(rates);
-            logger.info(GETTING_PRODUCT_LIST, ProductResponse.size());
-            return new ResponseEntity<>(ProductResponse, HttpStatus.CREATED);
+        Map<String, Float> rates = productService.getCurrencyBase();
+        List<ProductResponse> ProductResponse = productService.getProductListWithCurrencies(rates);
+        logger.info(GETTING_PRODUCT_LIST, ProductResponse.size());
+        return new ResponseEntity<>(ProductResponse, HttpStatus.CREATED);
     }
 
     public ResponseEntity<List<ProductResponse>> getDefaultCurrencyBase(Exception ex) {
@@ -60,8 +71,8 @@ public class ProductController {
     }
 
     @GetMapping("/currencyApi/{flag}")
-    public ResponseEntity<String> controlApiCall(@PathVariable String flag){
-        String result= productService.controlApiCall(flag);
+    public ResponseEntity<String> controlApiCall(@PathVariable String flag) {
+        String result = productService.controlApiCall(flag);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -75,6 +86,13 @@ public class ProductController {
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @ExceptionHandler({ProductNotFoundException.class, HttpMediaTypeNotAcceptableException.class})
+    public final ResponseEntity<ErrorDetails> handleUserNotFoundException(RuntimeException  ex, WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(),
+                request.getDescription(false));
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 }
 

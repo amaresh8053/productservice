@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.product.io.exception.ProductNotFoundException;
 import com.product.io.model.Product;
 import com.product.io.model.ProductResponse;
 import com.product.io.repository.ProductRepository;
@@ -19,10 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.product.io.util.Constant.*;
@@ -118,5 +116,16 @@ public class ProductServiceImpl implements ProductService{
             baseURL= BASEURL_DOWN;
         }
         return baseURL;
+    }
+
+    public Product getProduct(String id){
+        Product product=new Product();
+        Optional<Product> productOp=productRepository.findById(Long.parseLong(id));
+        if(productOp.isPresent()){
+            product= productOp.get();
+        }else {
+            throw new ProductNotFoundException("Invalid Product ID:-"+ id);
+        }
+        return product;
     }
 }
